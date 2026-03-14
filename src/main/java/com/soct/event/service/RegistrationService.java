@@ -2,7 +2,7 @@ package com.soct.event.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
+import com.soct.event.dto.EventWeatherDTO;
 import com.soct.event.model.Event;
 import com.soct.event.model.Registration;
 import com.soct.event.model.ActivityLog;
@@ -13,6 +13,7 @@ import com.soct.event.repository.RegistrationRepository;
 import com.soct.event.repository.UserRepository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -29,6 +30,8 @@ public class RegistrationService {
     
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private WeatherService weatherService;
 
 
     public Registration registerForEvent(Registration registration){
@@ -89,5 +92,40 @@ public class RegistrationService {
 
         return registrationRepository.findByStudentId(studentId);
     }
+   
+    public List<EventWeatherDTO> getRegisteredEventsWithWeather(String studentId){
+
+    List<Registration> registrations =
+        registrationRepository.findByStudentId(studentId);
+
+    List<EventWeatherDTO> result = new ArrayList<>();
+
+    for(Registration reg : registrations){
+
+        Event event = eventRepository.findById(reg.getEventId()).orElse(null);
+
+        if(event != null){
+
+            EventWeatherDTO dto = new EventWeatherDTO();
+           
+            dto.setTitle(event.getTitle());
+            dto.setEventId(event.getId());
+            dto.setLocation(event.getLocation());
+            dto.setDate(event.getDate());
+
+            String weather = weatherService.getWeather(event.getLocation());
+
+            dto.setWeather(weather);
+
+            result.add(dto);
+        }
+    }
+
+    return result;
+}
+
+    
+    
+    
     
 }

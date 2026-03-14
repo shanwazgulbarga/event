@@ -1,5 +1,6 @@
 package com.soct.event.controller;
 
+import com.soct.event.dto.EventWeatherDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,5 +29,18 @@ public class RegistrationController {
 
         return registrationService.getRegistrationsByStudent(studentId);
     }
+    
+    @GetMapping("/student/{studentId}/weather")
+    public List<EventWeatherDTO> getBookingsWithWeather(
+        @PathVariable String studentId){
+
+    return registrationService.getRegisteredEventsWithWeather(studentId);
 }
+
+
+
+
+
+}
+
 

@@ -1,5 +1,6 @@
 package com.soct.event.service;
 
+import com.soct.event.dto.EventWeatherDTO;
 import com.soct.event.model.ActivityLog;
 import com.soct.event.model.Event;
 import com.soct.event.repository.ActivityLogRepository;
@@ -10,13 +11,18 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 @Service
 public class EventService {
 
     @Autowired
     private EventRepository eventRepository;
+    
+    @Autowired
+    private WeatherService weatherService;
 
+    
     @Autowired
     private ActivityLogRepository activityLogRepository;
 
@@ -61,4 +67,40 @@ public List<Event> searchByTypeAndLocation(String type, String location){
 
     return eventRepository.findByPublisherId(publisherId);
 }
+  public List<EventWeatherDTO> getAllEventsWithWeather(){
+
+    List<Event> events = eventRepository.findAll();
+
+    List<EventWeatherDTO> result = new ArrayList<>();
+
+    for(Event event : events){
+
+        EventWeatherDTO dto = new EventWeatherDTO();
+
+        dto.setTitle(event.getTitle());
+        dto.setLocation(event.getLocation());
+        dto.setDate(event.getDate());
+
+        String weather = weatherService.getWeather(event.getLocation());
+
+        dto.setWeather(weather);
+
+        result.add(dto);
+    }
+
+    return result;
 }
+
+    
+    
+    
+    
+}
+
+
+
+
+
+
+
+

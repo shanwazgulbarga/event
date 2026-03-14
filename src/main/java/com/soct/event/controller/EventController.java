@@ -4,6 +4,7 @@
  */
 package com.soct.event.controller;
 
+import com.soct.event.dto.EventWeatherDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -55,8 +56,14 @@ public List<Event> searchByTypeAndLocation(
 }
     
     @GetMapping("/publisher/{publisherId}")
-    public List<Event> getEventsByCreator(@PathVariable String publisherId){
-
+    public List<Event> getEventsByCreator(@PathVariable String publisherId){    
+        
     return eventService.getEventsByPublisher(publisherId);
 }
+    @GetMapping("/weather")
+public List<EventWeatherDTO> getEventsWithWeather(){
+
+    return eventService.getAllEventsWithWeather();
+}
+
 }
