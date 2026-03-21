@@ -6,12 +6,12 @@ package com.soct.event.repository;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.List;
-import com.soct.event.model.Registration;
+import com.soct.event.model.Review;
 
-public interface RegistrationRepository extends MongoRepository<Registration,String>{
+public interface ReviewRepository extends MongoRepository<Review,String>{
 
+    List<Review> findByEventId(String eventId);
+
+    // prevent duplicate reviews by same user
     boolean existsByEventIdAndStudentId(String eventId, String studentId);
-
-    List<Registration> findByStudentId(String studentId);
-    
 }
