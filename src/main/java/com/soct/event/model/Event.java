@@ -1,5 +1,6 @@
 package com.soct.event.model;
 
+import java.util.List;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -17,7 +18,7 @@ public class Event {
     private int cost;
     private int maxParticipants;
     private int registeredParticipants;
-
+   
     public Event(){
         this.registeredParticipants = 0;
     }

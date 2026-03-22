@@ -5,10 +5,10 @@ import com.soct.event.model.ActivityLog;
 import com.soct.event.model.Event;
 import com.soct.event.repository.ActivityLogRepository;
 import com.soct.event.repository.EventRepository;
-
+import com.soct.event.dto.ImageDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
+import com.soct.event.dto.EventDTO;
 import java.util.List;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -21,7 +21,12 @@ public class EventService {
     
     @Autowired
     private WeatherService weatherService;
+   
+    @Autowired
+private PixabayService pixabayService;
 
+@Autowired
+private ReviewService reviewService;
     
     @Autowired
     private ActivityLogRepository activityLogRepository;
@@ -46,7 +51,6 @@ public class EventService {
     public List<Event> getAllEvents(){
         return eventRepository.findAll();
     }
-
     public List<Event> searchByType(String type){
         return eventRepository.findByType(type);
     }
@@ -91,6 +95,52 @@ public List<Event> searchByTypeAndLocation(String type, String location){
     return result;
 }
 
+  
+  public List<EventDTO> getAllEventsFull(){
+
+    List<Event> events = eventRepository.findAll();
+    List<EventDTO> result = new ArrayList<>();
+
+    for(Event event : events){
+
+        EventDTO dto = new EventDTO();
+
+        //  Basic data
+        dto.setId(event.getId());
+        dto.setPublisherId(event.getPublisherId());
+        dto.setTitle(event.getTitle());
+        dto.setType(event.getType());
+        dto.setDate(event.getDate());
+        dto.setLocation(event.getLocation());
+        dto.setCost(event.getCost());
+        dto.setMaxParticipants(event.getMaxParticipants());
+        dto.setRegisteredParticipants(event.getRegisteredParticipants());
+
+        //  External APIs
+        String query = event.getTitle() + " " + event.getLocation();
+
+        dto.setImages(
+            pixabayService.getImages(query).stream().limit(2).toList()
+        );
+
+
+        dto.setWeather(
+            weatherService.getWeather(event.getLocation())
+        );
+
+        dto.setAverageRating(
+            reviewService.getAverageRating(event.getId())
+        );
+
+        result.add(dto);
+    }
+
+    return result;
+}
+  
+  
+  
+  
     
     
     

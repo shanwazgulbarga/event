@@ -7,7 +7,7 @@ package com.soct.event.controller;
 import com.soct.event.dto.EventWeatherDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
+import com.soct.event.dto.EventDTO;
 import java.util.List;
 
 import com.soct.event.model.Event;
@@ -65,5 +65,12 @@ public List<EventWeatherDTO> getEventsWithWeather(){
 
     return eventService.getAllEventsWithWeather();
 }
+
+@GetMapping("/full")
+public List<EventDTO> getFullEvents(){
+    return eventService.getAllEventsFull();
+}
+
+
 
 }

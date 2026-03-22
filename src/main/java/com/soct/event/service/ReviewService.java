@@ -23,34 +23,34 @@ public class ReviewService {
     @Autowired
     private EventRepository eventRepository;
     
-    // ✅ Add Review (FULL validation)
+    //  Add Review (FULL validation)
     public Review addReview(Review review){
 
-    // 🔹 Normalize safely
+    //  Normalize safely
     String studentId = normalize(review.getStudentId());
     String eventId = (review.getEventId());
 
-    // 🔹 Null validation
+    //  Null validation
     if(studentId == null || eventId == null){
         throw new RuntimeException("Missing required fields");
     }
 
-    // 🔹 1. Check event exists
+    //  1. Check event exists
     if(!eventRepository.existsById(eventId)){
         throw new RuntimeException("Invalid event ID");
     }
 
-    // 🔹 2. Only registered users can review
+    //  2. Only registered users can review
     if(!registrationRepository.existsByEventIdAndStudentId(eventId, studentId)){
         throw new RuntimeException("You must attend the event to leave a review");
     }
 
-    // 🔹 3. Prevent duplicate reviews
+    //  3. Prevent duplicate reviews
     if(reviewRepository.existsByEventIdAndStudentId(eventId, studentId)){
         throw new RuntimeException("You already reviewed this event");
     }
 
-    // 🔹 4. Validate rating range
+    //  4. Validate rating range
     if(review.getRating() < 1 || review.getRating() > 5){
         throw new RuntimeException("Rating must be between 1 and 5");
     }
