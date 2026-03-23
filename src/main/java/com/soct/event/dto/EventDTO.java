@@ -25,7 +25,8 @@ public class EventDTO {
     private List<ImageDTO> images;
     private String weather;
     private double averageRating;
-
+   private double sentimentRating;
+private double finalScore;
     public EventDTO(){}
 
     //  Getters & Setters
@@ -66,4 +67,22 @@ public class EventDTO {
 
     public double getAverageRating(){ return averageRating; }
     public void setAverageRating(double averageRating){ this.averageRating = averageRating; }
+    
+    public double getSentimentRating() { 
+    return sentimentRating; 
+}
+
+public void setSentimentRating(double sentimentRating) { 
+    this.sentimentRating = sentimentRating; 
+}
+
+public double getFinalScore() { 
+    return finalScore; 
+}
+
+public void setFinalScore(double finalScore) { 
+    this.finalScore = finalScore; 
+}
+    
+    
 }

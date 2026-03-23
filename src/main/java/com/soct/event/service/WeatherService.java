@@ -4,13 +4,15 @@
  */
 package com.soct.event.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 @Service
 public class WeatherService {
 
-    private final String API_KEY = "9a86738447d73424a192439f7095b537";
+    @Value("${weather.api.key}")
+    private String API_KEY;
 
     public String getWeather(String location){
 
@@ -25,4 +27,3 @@ public class WeatherService {
         return restTemplate.getForObject(url,String.class);
     }
 }
-

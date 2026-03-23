@@ -36,7 +36,7 @@ public class PixabayService {
 
             String url = imageUrl +
                     "?key=" + apiKey +
-                    "&q=" + query +
+                    "&q=" + java.net.URLEncoder.encode(query, "UTF-8") +
                     "&image_type=photo&per_page=5";
 
             String response = restTemplate.getForObject(url, String.class);
@@ -55,9 +55,7 @@ public class PixabayService {
             return images;
 
         } catch (Exception e){
-            throw new RuntimeException("Failed to fetch images from Pixabay");
+            throw new RuntimeException("Failed to fetch images from Pixabay: " + e.getMessage());
         }
     }
-
-   
-    }
+}

@@ -5,6 +5,9 @@
 package com.soct.event.controller;
 
 import com.soct.event.dto.EventWeatherDTO;
+import com.soct.event.dto.ExternalEventDTO;
+import com.soct.event.dto.SemanticEventDTO;
+import com.soct.event.dto.SemanticInternalEventDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import com.soct.event.dto.EventDTO;
@@ -12,6 +15,7 @@ import java.util.List;
 
 import com.soct.event.model.Event;
 import com.soct.event.service.EventService;
+import com.soct.event.service.SkiddleService;
 
 @RestController
 @RequestMapping("/api/events")
@@ -19,6 +23,9 @@ public class EventController {
 
     @Autowired
     private EventService eventService;
+
+    @Autowired
+    private SkiddleService skiddleService;
 
     @PostMapping
     public Event createEvent(@RequestBody Event event){
@@ -69,6 +76,26 @@ public List<EventWeatherDTO> getEventsWithWeather(){
 @GetMapping("/full")
 public List<EventDTO> getFullEvents(){
     return eventService.getAllEventsFull();
+}
+
+@GetMapping("/full/semantic")
+public SemanticInternalEventDTO getSemanticInternalEvents(){
+    return eventService.getSemanticInternalEvents();
+}
+
+@GetMapping("/external")
+public List<ExternalEventDTO> getExternalEvents(@RequestParam String location){
+    return skiddleService.getEvents(location);
+}
+
+@GetMapping("/external/all")
+public List<ExternalEventDTO> getExternalEventsByDatabaseLocations(){
+    return eventService.getExternalEventsByDatabaseLocations();
+}
+
+@GetMapping("/external/all/semantic")
+public SemanticEventDTO getSemanticExternalEvents(){
+    return eventService.getSemanticExternalEvents();
 }
 
 
