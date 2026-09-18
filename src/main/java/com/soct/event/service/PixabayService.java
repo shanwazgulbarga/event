@@ -15,47 +15,53 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 
 @Service
 public class PixabayService {
 
-    @Value("${pixabay.api.key}")
+    @Value("${unsplash.api.key}")
     private String apiKey;
 
-    @Value("${pixabay.image.url}")
+    @Value("${unsplash.image.url}")
     private String imageUrl;
 
-    @Value("${pixabay.video.url}")
-    private String videoUrl;
-
-    // 📸 GET IMAGES
-    public List<ImageDTO> getImages(String query){
-
+    public List<ImageDTO> getImages(String query) {
         try {
-            RestTemplate restTemplate = new RestTemplate();
-
-            String url = imageUrl +
-                    "?key=" + apiKey +
-                    "&q=" + java.net.URLEncoder.encode(query, "UTF-8") +
-                    "&image_type=photo&per_page=5";
-
-            String response = restTemplate.getForObject(url, String.class);
-
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(response);
-
-            List<ImageDTO> images = new ArrayList<>();
-
-            for(JsonNode node : root.path("hits")){
-                ImageDTO dto = new ImageDTO();
-                dto.setImageUrl(node.path("webformatURL").asText());
-                images.add(dto);
+            if (apiKey == null || apiKey.isBlank()) {
+                throw new RuntimeException("Unsplash API key is not configured!");
             }
 
+            RestTemplate restTemplate = new RestTemplate();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Client-ID " + apiKey);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            String url = imageUrl +
+                    "/search/photos?query=" + java.net.URLEncoder.encode(query, "UTF-8") +
+                    "&per_page=5";
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url, HttpMethod.GET, entity, String.class
+            );
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(response.getBody());
+
+            List<ImageDTO> images = new ArrayList<>();
+            for (JsonNode node : root.path("results")) {
+                ImageDTO dto = new ImageDTO();
+                dto.setImageUrl(node.path("urls").path("regular").asText());
+                images.add(dto);
+            }
             return images;
 
-        } catch (Exception e){
-            throw new RuntimeException("Failed to fetch images from Pixabay: " + e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to fetch images from Unsplash: " + e.getMessage());
         }
     }
 }

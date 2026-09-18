@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+
+  # ── Frontend (Vite / React) ──────────────────────────────────────────────
+  frontend:
+    image: node:20
+    container_name: event-client
+    working_dir: /app
+    volumes:
+      - C:/Users/shanw/event-client:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    command: sh -c "npm install && npm run dev -- --host"
+    depends_on:
+      - backend
+    networks:
+      - soct-network
+
+  # ── Backend (Spring Boot) ────────────────────────────────────────────────
+  backend:
+    image: openjdk:17
+    container_name: event-backend
+    working_dir: /app
+    volumes:
+      - C:/Users/shanw/Downloads/event/event/target:/app
+    ports:
+      - "8080:8080"
+    command: sh -c "java -jar event-0.0.1-SNAPSHOT.jar"
+    networks:
+      - soct-network
+
+# ── Network ──────────────────────────────────────────────────────────────────
+networks:
+  soct-network:
+    driver: bridge

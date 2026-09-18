@@ -40,14 +40,14 @@ public class RegistrationService {
                         .orElseThrow(() -> new RuntimeException("Event not found"));
 
         
-         // 🔹 Get user
+         //  Get user
     User user = userRepository.findByStudentId(registration.getStudentId());
 
     if(user == null){
         throw new RuntimeException("User not found");
     }
 
-    // 🔹 Block admin booking
+    //  Block admin booking
     if("ADMIN".equalsIgnoreCase(user.getRole())){
         throw new RuntimeException("Admin users cannot book events");
     }
@@ -62,12 +62,12 @@ public class RegistrationService {
             throw new RuntimeException("You have already booked this event");
         }
 
-        // 🔹 Check event capacity
+        //  Check event capacity
         if(event.getRegisteredParticipants() >= event.getMaxParticipants()){
             throw new RuntimeException("Event is full");
         }
 
-        // 🔹 Increase participants count
+        //  Increase participants count
         event.setRegisteredParticipants(
                 event.getRegisteredParticipants() + 1
         );
@@ -87,7 +87,7 @@ public class RegistrationService {
 
         return savedRegistration;
     }
-    // 🔹 NEW METHOD to get the events by studentID
+    // NEW METHOD to get the events by studentID
     public List<Registration> getRegistrationsByStudent(String studentId){
 
         return registrationRepository.findByStudentId(studentId);

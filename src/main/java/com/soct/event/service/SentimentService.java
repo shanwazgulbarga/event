@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.soct.event.service;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -14,12 +10,6 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-
-/**
- *
- * @author shanw
- */
-
 @Service
 public class SentimentService {
 
@@ -29,42 +19,68 @@ public class SentimentService {
     @Value("${sentiment.api.url}")
     private String apiUrl;
 
-    public String analyzeSentiment(String text){
-
+    public String analyzeSentiment(String comment) {
         try {
             RestTemplate restTemplate = new RestTemplate();
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setAccept(java.util.List.of(MediaType.APPLICATION_JSON)); // Fix: router rejects text/plain
             headers.setBearerAuth(apiKey);
 
-            String body = "{\"inputs\": \"" + text.replace("\"", "\\\"") + "\"}";
+            // Safely escape the comment for JSON
+            ObjectMapper mapper = new ObjectMapper();
+            String escapedComment = mapper.writeValueAsString(comment); // includes surrounding quotes
+            String body = "{\"inputs\": " + escapedComment + "}";
 
             HttpEntity<String> request = new HttpEntity<>(body, headers);
 
             String response = restTemplate.postForObject(apiUrl, request, String.class);
 
-            ObjectMapper mapper = new ObjectMapper();
             JsonNode root = mapper.readTree(response);
 
-            JsonNode results = root.get(0);
+            // HuggingFace returns [[{label, score}, ...]]
+            JsonNode results = root.isArray() ? root.get(0) : null;
             if (results == null || !results.isArray()) return "NEUTRAL";
 
-            String label = "NEUTRAL";
+            String bestLabel = "NEUTRAL";
             double bestScore = -1;
 
             for (JsonNode item : results) {
                 double score = item.path("score").asDouble();
                 if (score > bestScore) {
                     bestScore = score;
-                    label = item.path("label").asText().toUpperCase();
+                    bestLabel = item.path("label").asText();
                 }
             }
 
-            return label;
+            return mapLabel(bestLabel);
 
-        } catch (Exception e){
+        } catch (Exception e) {
+            e.printStackTrace(); // helpful during development
             return "NEUTRAL";
         }
+    }
+
+    /**
+     * Maps model-specific labels to readable sentiment.
+     *
+     * twitter-roberta-base-sentiment-latest uses:
+     *   LABEL_0 = Negative
+     *   LABEL_1 = Neutral
+     *   LABEL_2 = Positive
+     *
+     * Some models return "positive"/"negative"/"neutral" directly.
+     */
+    private String mapLabel(String label) {
+        return switch (label.toUpperCase()) {
+            case "LABEL_0"   -> "NEGATIVE";
+            case "LABEL_1"   -> "NEUTRAL";
+            case "LABEL_2"   -> "POSITIVE";
+            case "POSITIVE"  -> "POSITIVE";
+            case "NEGATIVE"  -> "NEGATIVE";
+            case "NEUTRAL"   -> "NEUTRAL";
+            default          -> "NEUTRAL";
+        };
     }
 }

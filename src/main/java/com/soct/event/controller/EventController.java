@@ -83,6 +83,7 @@ public SemanticInternalEventDTO getSemanticInternalEvents(){
     return eventService.getSemanticInternalEvents();
 }
 
+
 @GetMapping("/external")
 public List<ExternalEventDTO> getExternalEvents(@RequestParam String location){
     return skiddleService.getEvents(location);
@@ -98,6 +99,11 @@ public SemanticEventDTO getSemanticExternalEvents(){
     return eventService.getSemanticExternalEvents();
 }
 
+
+@GetMapping("/full/semantic/location")
+public SemanticInternalEventDTO getSemanticInternalEventsByLocation(@RequestParam String location) {
+    return eventService.getSemanticInternalEventsByLocation(location);
+}
 
 
 }

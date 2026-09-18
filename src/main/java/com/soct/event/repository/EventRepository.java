@@ -21,5 +21,5 @@ List<Event> findByTypeAndLocation(String type, String location);
 List<Event> findByTypeAndDate(String type, String date);
     
     List<Event> findByPublisherId(String publisherId);
-
+List<Event> findByLocationContainingIgnoreCase(String location);
 }

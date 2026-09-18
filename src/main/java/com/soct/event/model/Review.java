@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.soct.event.model;
 
 import org.springframework.data.annotation.Id;
@@ -17,8 +13,11 @@ public class Review {
     private String studentId;
     private String comment;
     private int rating; // 1 to 5
-
     private String timestamp;
+
+    // Automatically set by SentimentService when a comment is provided
+    // Values: "POSITIVE", "NEGATIVE", "NEUTRAL"
+    private String sentiment;
 
     public Review(){}
 
@@ -39,4 +38,7 @@ public class Review {
 
     public String getTimestamp(){ return timestamp; }
     public void setTimestamp(String timestamp){ this.timestamp = timestamp; }
+
+    public String getSentiment(){ return sentiment; }
+    public void setSentiment(String sentiment){ this.sentiment = sentiment; }
 }

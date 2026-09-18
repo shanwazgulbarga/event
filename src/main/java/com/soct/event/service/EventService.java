@@ -258,30 +258,23 @@ public SemanticEventDTO getSemanticExternalEvents(){
 
     return result;
 }
-
-public SemanticInternalEventDTO getSemanticInternalEvents(){
+// ── EXISTING METHOD (unchanged) ───────────────────────────────────────────────
+public SemanticInternalEventDTO getSemanticInternalEvents() {
 
     List<Event> events = eventRepository.findAll();
 
-    // Cache Wikidata lookups — one call per unique city not per event
     Map<String, WikidataLocationDTO> locationCache = new HashMap<>();
-
     List<SemanticInternalEventItem> items = new ArrayList<>();
-
     int position = 1;
 
-    for(Event event : events){
+    for (Event event : events) {
 
-        // ── Wikidata enrichment (cached) ──────────────────────────────────
         String cityName = event.getLocation();
-
-        if(!locationCache.containsKey(cityName)){
+        if (!locationCache.containsKey(cityName)) {
             locationCache.put(cityName, wikidataService.enrichLocation(cityName));
         }
-
         WikidataLocationDTO wikidata = locationCache.get(cityName);
 
-        // ── Location ──────────────────────────────────────────────────────
         SemanticGeoCoordinates geo = new SemanticGeoCoordinates();
         geo.setLatitude(wikidata.getLatitude());
         geo.setLongitude(wikidata.getLongitude());
@@ -296,44 +289,35 @@ public SemanticInternalEventDTO getSemanticInternalEvents(){
         location.setGeo(geo);
         location.setContainedInPlace(country);
 
-        // ── Offer (cost) ──────────────────────────────────────────────────
         int remaining = event.getMaxParticipants() - event.getRegisteredParticipants();
 
         SemanticOffer offer = new SemanticOffer();
         offer.setPrice(event.getCost());
-        offer.setAvailability(
-            remaining > 0
+        offer.setAvailability(remaining > 0
                 ? "https://schema.org/InStock"
-                : "https://schema.org/SoldOut"
-        );
+                : "https://schema.org/SoldOut");
 
-        // ── Organizer ─────────────────────────────────────────────────────
         SemanticOrganizer organizer = new SemanticOrganizer();
         organizer.setIdentifier(event.getPublisherId());
 
-        // ── Aggregate rating ──────────────────────────────────────────────
         double avgRating = reviewService.getAverageRating(event.getId());
-
         SemanticAggregateRating aggregateRating = new SemanticAggregateRating();
         aggregateRating.setRatingValue(avgRating);
 
-        // ── Image (first Pixabay result) ──────────────────────────────────
         String imageUrl = "";
         try {
             List<com.soct.event.dto.ImageDTO> images = pixabayService.getImages(event.getTitle());
-            if(!images.isEmpty()){
+            if (!images.isEmpty()) {
                 imageUrl = images.get(0).getImageUrl();
             }
-        } catch (Exception e){
-            // leave empty if Pixabay fails
+        } catch (Exception e) {
+            // leave empty if image fetch fails
         }
 
-        // ── Event status ──────────────────────────────────────────────────
         String eventStatus = remaining > 0
                 ? "https://schema.org/EventScheduled"
                 : "https://schema.org/EventSoldOut";
 
-        // ── Build semantic event ──────────────────────────────────────────
         SemanticInternalEvent semanticEvent = new SemanticInternalEvent();
         semanticEvent.setName(event.getTitle());
         semanticEvent.setStartDate(event.getDate());
@@ -349,17 +333,102 @@ public SemanticInternalEventDTO getSemanticInternalEvents(){
         SemanticInternalEventItem item = new SemanticInternalEventItem();
         item.setPosition(position);
         item.setItem(semanticEvent);
-
         items.add(item);
         position++;
     }
 
     SemanticInternalEventDTO result = new SemanticInternalEventDTO();
     result.setItemListElement(items);
+    return result;
+}
 
+// ── NEW METHOD — filtered by location ────────────────────────────────────────
+public SemanticInternalEventDTO getSemanticInternalEventsByLocation(String locationFilter) {
+
+    // ✅ Only difference — filter events by location instead of findAll()
+    List<Event> events = eventRepository.findByLocationContainingIgnoreCase(locationFilter);
+
+    Map<String, WikidataLocationDTO> locationCache = new HashMap<>();
+    List<SemanticInternalEventItem> items = new ArrayList<>();
+    int position = 1;
+
+    for (Event event : events) {
+
+        String cityName = event.getLocation();
+        if (!locationCache.containsKey(cityName)) {
+            locationCache.put(cityName, wikidataService.enrichLocation(cityName));
+        }
+        WikidataLocationDTO wikidata = locationCache.get(cityName);
+
+        SemanticGeoCoordinates geo = new SemanticGeoCoordinates();
+        geo.setLatitude(wikidata.getLatitude());
+        geo.setLongitude(wikidata.getLongitude());
+
+        SemanticCountry country = new SemanticCountry();
+        country.setName(wikidata.getCountryName());
+        country.setWikidataUri(wikidata.getCountryWikidataUri());
+
+        SemanticEnrichedLocation location = new SemanticEnrichedLocation();
+        location.setName(cityName);
+        location.setWikidataUri(wikidata.getWikidataUri());
+        location.setGeo(geo);
+        location.setContainedInPlace(country);
+
+        int remaining = event.getMaxParticipants() - event.getRegisteredParticipants();
+
+        SemanticOffer offer = new SemanticOffer();
+        offer.setPrice(event.getCost());
+        offer.setAvailability(remaining > 0
+                ? "https://schema.org/InStock"
+                : "https://schema.org/SoldOut");
+
+        SemanticOrganizer organizer = new SemanticOrganizer();
+        organizer.setIdentifier(event.getPublisherId());
+
+        double avgRating = reviewService.getAverageRating(event.getId());
+        SemanticAggregateRating aggregateRating = new SemanticAggregateRating();
+        aggregateRating.setRatingValue(avgRating);
+
+        String imageUrl = "";
+        try {
+            List<com.soct.event.dto.ImageDTO> images = pixabayService.getImages(event.getTitle());
+            if (!images.isEmpty()) {
+                imageUrl = images.get(0).getImageUrl();
+            }
+        } catch (Exception e) {
+            // leave empty if image fetch fails
+        }
+
+        String eventStatus = remaining > 0
+                ? "https://schema.org/EventScheduled"
+                : "https://schema.org/EventSoldOut";
+
+        SemanticInternalEvent semanticEvent = new SemanticInternalEvent();
+        semanticEvent.setName(event.getTitle());
+        semanticEvent.setStartDate(event.getDate());
+        semanticEvent.setEventStatus(eventStatus);
+        semanticEvent.setMaximumAttendeeCapacity(event.getMaxParticipants());
+        semanticEvent.setRemainingAttendeeCapacity(remaining);
+        semanticEvent.setOffers(offer);
+        semanticEvent.setOrganizer(organizer);
+        semanticEvent.setAggregateRating(aggregateRating);
+        semanticEvent.setImage(imageUrl);
+        semanticEvent.setLocation(location);
+
+        SemanticInternalEventItem item = new SemanticInternalEventItem();
+        item.setPosition(position);
+        item.setItem(semanticEvent);
+        items.add(item);
+        position++;
+    }
+
+    SemanticInternalEventDTO result = new SemanticInternalEventDTO();
+    result.setItemListElement(items);
     return result;
 }
 
     
   
+
+
 }
